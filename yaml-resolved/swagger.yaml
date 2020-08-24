@@ -6,6 +6,8 @@ info:
 servers:
 - url: https://api.scalatel.com/v1
   description: Staging API
+security:
+- ApiKeyAuth: []
 paths:
   /contacts/{id}:
     get:
@@ -277,3 +279,8 @@ components:
         count:
           type: integer
           format: int32
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      name: X-Scalatel-Auth
+      in: header
