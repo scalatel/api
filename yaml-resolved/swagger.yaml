@@ -1,0 +1,279 @@
+openapi: 3.0.0
+info:
+  title: Scalatel API
+  description: The Scalatel API
+  version: 1.0.1
+servers:
+- url: https://api.scalatel.com/v1
+  description: Staging API
+paths:
+  /contacts/{id}:
+    get:
+      tags:
+      - contacts
+      summary: Get contact by Id
+      operationId: getContactById
+      parameters:
+      - name: id
+        in: path
+        description: the id of contact
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Returns the contact for requested ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Contact'
+        "404":
+          description: Contact not found.
+  /contacts/{listId}:
+    put:
+      tags:
+      - contacts
+      summary: Upsert Contacts
+      operationId: upsertContactsForListId
+      parameters:
+      - name: listId
+        in: path
+        description: the id of the list to which contacts is to be imported.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/Contact'
+        required: true
+      responses:
+        "200":
+          description: Upsert operation submitted successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ack'
+        "400":
+          description: Request Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /contacts:
+    get:
+      tags:
+      - contacts
+      summary: Get all contacts
+      description: Get all contacts.
+      operationId: getAllContacts
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Contact'
+        "400":
+          description: Request Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "404":
+          description: No Contacts found
+  /contacts/import:
+    put:
+      tags:
+      - contacts
+      summary: Returns a URL to upload the csv contact list file.
+      description: This endpoint returns a URL and HTTP headers which can be used
+        to PUT a file of contacts in csv format.
+      parameters:
+      - name: list_ids
+        in: query
+        description: comma seperated list ids to which all the contacts should be
+          upserted.
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: returns the upload uri and headers to where the file has to
+            be uploaded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadAck'
+        "400":
+          description: Request Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /lists/{id}/contacts/count:
+    get:
+      tags:
+      - lists
+      summary: Use this method to return the number of contacts on a specific list.
+      description: Use this method to return the number of contacts on a specific
+        list.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "404":
+          description: the contact list was not found
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200'
+  /lists:
+    get:
+      tags:
+      - lists
+      summary: Get all contact lists of the user.
+      responses:
+        "200":
+          description: contact list of the user.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ContactList'
+        "404":
+          description: not contact list found for the user.
+    post:
+      tags:
+      - lists
+      summary: creates a contact list
+      parameters:
+      - name: name
+        in: query
+        required: true
+        style: form
+        explode: true
+        schema:
+          maxLength: 255
+          minLength: 5
+          type: string
+      responses:
+        "400":
+          description: Request Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "200":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactList'
+  /lists/count:
+    get:
+      tags:
+      - lists
+      summary: Get count of contact lists.
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200'
+components:
+  schemas:
+    Contact:
+      required:
+      - email
+      - first_name
+      - last_name
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        first_name:
+          type: string
+        last_name:
+          type: string
+    Ack:
+      required:
+      - message
+      type: object
+      properties:
+        message:
+          type: string
+    UploadAck:
+      required:
+      - upload_headers
+      - upload_uri
+      type: object
+      properties:
+        upload_uri:
+          type: string
+        upload_headers:
+          type: array
+          items:
+            $ref: '#/components/schemas/Map'
+    Map:
+      required:
+      - key
+      - value
+      type: object
+      properties:
+        key:
+          type: string
+        value:
+          type: string
+    ContactList:
+      required:
+      - count
+      - name
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        count:
+          type: integer
+          format: int64
+    Error:
+      required:
+      - code
+      - message
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        message:
+          type: string
+    inline_response_200:
+      type: object
+      properties:
+        count:
+          type: integer
+          format: int32
