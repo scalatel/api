@@ -101,7 +101,7 @@ paths:
       description: This endpoint returns a URL and HTTP headers which can be used
         to PUT a file of contacts in csv format.
       parameters:
-      - name: list_ids
+      - name: listIds
         in: query
         description: comma seperated list ids to which all the contacts should be
           upserted.
